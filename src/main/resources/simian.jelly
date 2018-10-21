@@ -1,159 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<j:jelly xmlns:j="jelly:core"
-xmlns:jsl="jelly:jsl"
-xmlns:util="jelly:util"
-xmlns:x="jelly:xml"
-xmlns:log="jelly:log"
-xmlns="dummy"
-trim="false">  
-
-
-<j:useBean var="simianutils" class="edu.jiangxin.mvn.plugin.SimianUtils"/>
-
-  <x:parse var="doc" xml="report.xml"/>  
-  <j:file name="jiangxin.html" outputMode="html" encoding="UTF-8"> 
-    <jsl:stylesheet select="$doc"> 
-    
-      <jsl:template match="simian"> 
-        <html> 
-          <head> 
-            <title>Simian Results</title> 
-          </head>  
-          <body> 
-            <section name="Simian Results"> 
-              <p>The following document contains the results of 
-                <a href="http://www.redhillconsulting.com.au/products/simian/index.html">Simian 
-                  <x:expr select="./@version"/>
-                </a>.
-              </p> 
-            </section>  
-            <section name="Summary"> 
-              <table summary="Simian report summary"> 
-                <tbody> 
-                  <tr> 
-                    <th>Similarity threshold (lines)</th>  
-                    <td>
-                      <x:expr select="./check/@threshold"/>
-                    </td> 
-                  </tr>  
-                  <tr> 
-                    <th>Total number of duplicate lines</th>  
-                    <td>
-                      <x:expr select="./check/summary/@duplicateLineCount"/>
-                    </td> 
-                  </tr>  
-                  <tr> 
-                    <th>Total number of duplicate blocks</th>  
-                    <td>
-                      <x:expr select="./check/summary/@duplicateBlockCount"/>
-                    </td> 
-                  </tr>  
-                  <tr> 
-                    <th>Total number of files with duplicates</th>  
-                    <td>
-                      <x:expr select="./check/summary/@duplicateFileCount"/>
-                    </td> 
-                  </tr>  
-                  <tr> 
-                    <th>Total number of processed lines</th>  
-                    <td>
-                      <x:expr select="./check/summary/@totalSignificantLineCount"/>
-                    </td> 
-                  </tr>  
-                  <tr> 
-                    <th>Total number of processed files</th>  
-                    <td>
-                      <x:expr select="./check/summary/@totalFileCount"/>
-                    </td> 
-                  </tr>  
-                  <tr> 
-                    <th>Scan time</th>  
-                    <td>
-                      <x:expr select="./check/summary/@processingTime"/> ms.
-                    </td> 
-                  </tr> 
-                </tbody> 
-              </table> 
-            </section>  
-            <section name="Duplications"> 
-             
-              <j:set var="fullSrcDir" value="${pom.build.sourceDirectory}"/> 
-              <log:info>fullSrcDir is: ${fullSrcDir}</log:info>
-              
-              <j:set var="fullTestSrcDir" value="${pom.build.unitTestSourceDirectory}"/>  
-              <log:info>fullTestSrcDir is: ${fullTestSrcDir}</log:info>
-              
-              <j:set var="srcDir" value="${simianutils.file(fullSrcDir).getCanonicalPath()}"/>
-              <log:info>srcDir is: ${srcDir}</log:info> 
-              
-              <j:set var="testDir" value="${simianutils.file(fullTestSrcDir).getCanonicalPath()}"/>
-              <log:info>testDir is: ${testDir}</log:info>
-              
-              <x:set var="sets" select="./check/set"/>  
-              <j:forEach var="duplication" items="${sets}" indexVar="i">
-                <div name="Duplication: ${duplication.attribute('lineCount').getValue()} lines"> 
-                  <x:set var="blocks" select="./check/set[${i}]/block"/>
-                  <log:info>sets is: ${blocks}</log:info>
-                  <ul> 
-                    <j:forEach var="duplicationArea" items="${blocks}"> 
-                      <j:set var="name" value="${duplicationArea.attribute('sourceFile').getValue()}"/>
-                      <log:info>name is: ${name}</log:info>
-                      <j:set var="srcDirLength" value="${srcDir.length() + 1}"/>  
-                      <j:set var="testDirLength" value="${testDir.length() + 1}"/>  
-                      <j:set var="testIndex" value="${name.lastIndexOf(testDir)}"/>  
-                      <j:choose>
-                      <log:info>newname1 is: ${testDirLength.toString()}</log:info>
-                      <log:info>newname is: ${name.substring(simianutils.toInteger(testDirLength.toString()))}</log:info>
-                        <j:when test="${testIndex &gt; -1}"> 
-                          <j:set var="name" value="${name.substring(simianutils.toInteger(testDirLength.toString()))}"/> 
-                        </j:when>  
-                        <j:otherwise> 
-                          <j:set var="name" value="${name.substring(simianutils.toInteger(srcDirLength.toString()))}"/> 
-                        </j:otherwise> 
-                      </j:choose>  
-                      <j:set var="lastIndex" value="${name.lastIndexOf('.java')}"/>  
-                      <j:choose> 
-                        <j:when test="${lastIndex &gt; 0}"> 
-                          <j:set var="index" value="${simianutils.toInteger(lastIndex.toString())}"/>  
-                          <j:set var="nameWithoutJavaExtension" value="${name.substring(0, index)}"/>  
-                          <util:replace var="nameWithoutJavaExtension" value="${nameWithoutJavaExtension}" oldChar="\\" newChar="/"/>  
-                          <j:choose> 
-                            <j:when test="${testIndex &gt; -1}"> 
-                              <li>
-                                <a href="xref-test/${nameWithoutJavaExtension}.html#${duplicationArea.attribute('startLineNumber').getValue()}">${nameWithoutJavaExtension} ( ${duplicationArea.attribute('startLineNumber').getValue()} - ${duplicationArea.attribute('endLineNumber').getValue()} )</a>
-                              </li> 
-                            </j:when>  
-                            <j:otherwise> 
-                              <li>
-                                <a href="xref/${nameWithoutJavaExtension}.html#${duplicationArea.attribute('startLineNumber').getValue()}">${nameWithoutJavaExtension} ( ${duplicationArea.attribute('startLineNumber').getValue()} - ${duplicationArea.attribute('endLineNumber').getValue()} )</a>
-                              </li> 
-                            </j:otherwise> 
-                          </j:choose> 
-                        </j:when>  
-                        <j:otherwise> 
-                          <j:choose> 
-                            <j:when test="${testIndex &gt; -1}"> 
-                              <li>
-                                <a href="xref-test/${name}.html#${duplicationArea.attribute('startLineNumber').getValue()}">${nameWithoutJavaExtension} ( ${duplicationArea.attribute('startLineNumber').getValue()} - ${duplicationArea.attribute('endLineNumber').getValue()} )</a>
-                              </li> 
-                            </j:when>  
-                            <j:otherwise> 
-                              <li>
-                                <a href="xref/${name}.html#${duplicationArea.attribute('startLineNumber').getValue()}">${nameWithoutJavaExtension} ( ${duplicationArea.attribute('startLineNumber').getValue()} - ${duplicationArea.attribute('endLineNumber').getValue()} )</a>
-                              </li> 
-                            </j:otherwise> 
-                          </j:choose> 
-                        </j:otherwise> 
-                      </j:choose> 
-                    </j:forEach> 
-                  </ul> 
-                </div> 
-              </j:forEach> 
-            </section> 
-          </body> 
-        </html> 
-      </jsl:template> 
-    </jsl:stylesheet> 
-  </j:file> 
+<j:jelly xmlns:j="jelly:core" xmlns:jsl="jelly:jsl"
+    xmlns:util="jelly:util" xmlns:x="jelly:xml" xmlns:log="jelly:log"
+    xmlns="dummy" trim="false">
+    <j:useBean var="simianutils"
+        class="edu.jiangxin.mvn.plugin.SimianUtils" />
+    <x:parse var="doc" xml="report.xml" />
+    <j:file name="jiangxin.html" outputMode="html"
+        encoding="UTF-8">
+        <jsl:stylesheet select="$doc">
+            <jsl:template match="simian">
+                <html>
+                    <head>
+                        <title>Simian Results</title>
+                    </head>
+                    <body>
+                        <section name="Simian Results">
+                            <p>
+                                The following document contains the
+                                results of
+                                <a
+                                    href="http://www.redhillconsulting.com.au/products/simian/index.html">
+                                    Simian
+                                    <x:expr select="./@version" />
+                                </a>
+                                .
+                            </p>
+                        </section>
+                        <section name="Summary">
+                            <table summary="Simian report summary">
+                                <tbody>
+                                    <tr>
+                                        <th>Similarity threshold (lines)
+                                        </th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/@threshold" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total number of duplicate
+                                            lines
+                                        </th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/summary/@duplicateLineCount" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total number of duplicate
+                                            blocks
+                                        </th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/summary/@duplicateBlockCount" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total number of files with
+                                            duplicates
+                                        </th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/summary/@duplicateFileCount" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total number of processed
+                                            lines
+                                        </th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/summary/@totalSignificantLineCount" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total number of processed
+                                            files
+                                        </th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/summary/@totalFileCount" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Scan time</th>
+                                        <td>
+                                            <x:expr
+                                                select="./check/summary/@processingTime" />
+                                            ms.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                        <section name="Duplications">
+                            <j:set var="fullSrcDir"
+                                value="${pom.build.sourceDirectory}" />
+                            <log:info>fullSrcDir is: ${fullSrcDir}
+                            </log:info>
+                            <j:set var="fullTestSrcDir"
+                                value="${pom.build.unitTestSourceDirectory}" />
+                            <log:info>fullTestSrcDir is:
+                                ${fullTestSrcDir}
+                            </log:info>
+                            <j:set var="srcDir"
+                                value="${simianutils.file(fullSrcDir).getCanonicalPath()}" />
+                            <log:info>srcDir is: ${srcDir}</log:info>
+                            <j:set var="testDir"
+                                value="${simianutils.file(fullTestSrcDir).getCanonicalPath()}" />
+                            <log:info>testDir is: ${testDir}</log:info>
+                            <x:set var="sets" select="./check/set" />
+                            <j:forEach var="duplication"
+                                items="${sets}" indexVar="i">
+                                <div
+                                    name="Duplication: ${duplication.attribute('lineCount').getValue()} lines">
+                                    <x:set var="blocks"
+                                        select="./check/set[${i}]/block" />
+                                    <log:info>sets is: ${blocks}
+                                    </log:info>
+                                    <ul>
+                                        <j:forEach
+                                            var="duplicationArea"
+                                            items="${blocks}">
+                                            <j:set var="name"
+                                                value="${duplicationArea.attribute('sourceFile').getValue()}" />
+                                            <log:info>name is: ${name}
+                                            </log:info>
+                                            <j:set
+                                                var="srcDirLength"
+                                                value="${srcDir.length() + 1}" />
+                                            <j:set
+                                                var="testDirLength"
+                                                value="${testDir.length() + 1}" />
+                                            <j:set var="testIndex"
+                                                value="${name.lastIndexOf(testDir)}" />
+                                            <j:choose>
+                                                <j:when
+                                                    test="${testIndex &gt; -1}">
+                                                    <j:set
+                                                        var="name"
+                                                        value="${name.substring(simianutils.toInteger(testDirLength.toString()))}" />
+                                                </j:when>
+                                                <j:otherwise>
+                                                    <j:set
+                                                        var="name"
+                                                        value="${name.substring(simianutils.toInteger(srcDirLength.toString()))}" />
+                                                </j:otherwise>
+                                            </j:choose>
+                                            <j:set var="lastIndex"
+                                                value="${name.lastIndexOf('.java')}" />
+                                            <j:choose>
+                                                <j:when
+                                                    test="${lastIndex &gt; 0}">
+                                                    <j:set
+                                                        var="index"
+                                                        value="${simianutils.toInteger(lastIndex.toString())}" />
+                                                    <j:set
+                                                        var="nameWithoutJavaExtension"
+                                                        value="${name.substring(0, index)}" />
+                                                    <util:replace
+                                                        var="nameWithoutJavaExtension"
+                                                        value="${nameWithoutJavaExtension}"
+                                                        oldChar="\\"
+                                                        newChar="/" />
+                                                    <j:choose>
+                                                        <j:when
+                                                            test="${testIndex &gt; -1}">
+                                                            <li>
+                                                                <a
+                                                                    href="xref-test/${nameWithoutJavaExtension}.html#${duplicationArea.attribute('startLineNumber').getValue()}">
+                                                                    ${nameWithoutJavaExtension}
+                                                                    (
+                                                                    ${duplicationArea.attribute('startLineNumber').getValue()}
+                                                                    -
+                                                                    ${duplicationArea.attribute('endLineNumber').getValue()}
+                                                                    )
+                                                                </a>
+                                                            </li>
+                                                        </j:when>
+                                                        <j:otherwise>
+                                                            <li>
+                                                                <a
+                                                                    href="xref/${nameWithoutJavaExtension}.html#${duplicationArea.attribute('startLineNumber').getValue()}">
+                                                                    ${nameWithoutJavaExtension}
+                                                                    (
+                                                                    ${duplicationArea.attribute('startLineNumber').getValue()}
+                                                                    -
+                                                                    ${duplicationArea.attribute('endLineNumber').getValue()}
+                                                                    )
+                                                                </a>
+                                                            </li>
+                                                        </j:otherwise>
+                                                    </j:choose>
+                                                </j:when>
+                                                <j:otherwise>
+                                                    <j:choose>
+                                                        <j:when
+                                                            test="${testIndex &gt; -1}">
+                                                            <li>
+                                                                <a
+                                                                    href="xref-test/${name}.html#${duplicationArea.attribute('startLineNumber').getValue()}">
+                                                                    ${nameWithoutJavaExtension}
+                                                                    (
+                                                                    ${duplicationArea.attribute('startLineNumber').getValue()}
+                                                                    -
+                                                                    ${duplicationArea.attribute('endLineNumber').getValue()}
+                                                                    )
+                                                                </a>
+                                                            </li>
+                                                        </j:when>
+                                                        <j:otherwise>
+                                                            <li>
+                                                                <a
+                                                                    href="xref/${name}.html#${duplicationArea.attribute('startLineNumber').getValue()}">
+                                                                    ${nameWithoutJavaExtension}
+                                                                    (
+                                                                    ${duplicationArea.attribute('startLineNumber').getValue()}
+                                                                    -
+                                                                    ${duplicationArea.attribute('endLineNumber').getValue()}
+                                                                    )
+                                                                </a>
+                                                            </li>
+                                                        </j:otherwise>
+                                                    </j:choose>
+                                                </j:otherwise>
+                                            </j:choose>
+                                        </j:forEach>
+                                    </ul>
+                                </div>
+                            </j:forEach>
+                        </section>
+                    </body>
+                </html>
+            </jsl:template>
+        </jsl:stylesheet>
+    </j:file>
 </j:jelly>
