@@ -5,11 +5,6 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 
-/**
- * 文件过滤器.
- * <p style="text-indent:2em">过滤出符合要求的目录或者文件夹。</p>
- * @author jiangxin
- */
 public class FileFilterWrapper {
 
 	ArrayList<File> arrayList = new ArrayList<File>();

@@ -6,9 +6,9 @@ import com.harukizaemon.simian.Block;
 
 public class BlockSet {
 	private List<Block> blocks;
-	
+
 	private int lineCount;
-	
+
 	private String fingerprint;
 
 	/**
@@ -52,7 +52,5 @@ public class BlockSet {
 	public void setFingerprint(String fingerprint) {
 		this.fingerprint = fingerprint;
 	}
-	
-	
 
 }
