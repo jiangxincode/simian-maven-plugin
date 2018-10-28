@@ -6,11 +6,9 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.apache.maven.doxia.siterenderer.Renderer;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
@@ -20,56 +18,50 @@ import com.harukizaemon.simian.Option;
 import com.harukizaemon.simian.Options;
 import com.harukizaemon.simian.StreamLoader;
 
-@Mojo(name = "my-report", defaultPhase = LifecyclePhase.SITE, threadSafe = true, requiresProject = true)
+@Mojo(name = "simian-report", defaultPhase = LifecyclePhase.SITE, threadSafe = true, requiresProject = true)
 public class SimianReport extends AbstractMavenReport {
 
 	private SimianReportRenderer simianReportRenderer;
 
-	@Override
-	public Renderer getSiteRenderer() {
-		return siteRenderer;
-	}
+	@Parameter(defaultValue = "${basedir}", property = "simian.projectDirectory", required = true)
+	private String projectDirectory;
 
-	@Parameter(defaultValue = "${project.reporting.outputDirectory}", property = "simian.srcDirectory", required = true)
+	@Parameter(defaultValue = "${project.reporting.outputDirectory}", property = "simian.outputDirectory", required = true)
 	private String outputDirectory;
+
+	@Parameter(defaultValue = "${project.build.sourceDirectory}", property = "simian.sourceDirectory", required = true)
+	private String sourceDirectory;
+
+	@Parameter(defaultValue = "${project.build.testSourceDirectory}", property = "simian.testSourceDirectory", required = true)
+	private String testSourceDirectory;
+	
+	@Parameter(defaultValue = "6", property = "simian.threshold", required = true)
+	private int threshold;
 
 	@Override
 	public String getOutputDirectory() {
 		return outputDirectory;
 	}
 
-	@Parameter(defaultValue = "${project.build.sourceDirectory}", property = "simian.srcDirectory", required = true)
-	private String sourceDirectory;
-
-	@Parameter(defaultValue = "${project.build.testSourceDirectory}", property = "simian.testSourceDirectory", required = true)
-	private String testSourceDirectory;
-
-	@Parameter(defaultValue = "${project}", readonly = true, required = true)
-	private MavenProject project;
-
-	@Override
-	public MavenProject getProject() {
-		return project;
-	}
-
 	@Override
 	public void executeReport(Locale locale) throws MavenReportException {
-		getLog().info("testSourceDirectory： " + testSourceDirectory);
-		ArrayList<File> lists = new FileFilterWrapper().list(testSourceDirectory, ".java");
+		getLog().info("projectDirectory： " + projectDirectory);
+		ArrayList<File> lists = new FileFilterWrapper().list(projectDirectory, ".java");
 		assert lists != null;
 		String[] params = new String[lists.size()];
 		for (int i = 0; i < lists.size(); i++) {
 			try {
 				params[i] = lists.get(i).getCanonicalPath();
 			} catch (IOException e) {
-				getLog().error(e);
+				getLog().error("getCanonicalPath failed", e);
+				return;
 			}
 		}
 
 		MyAuditListener auditListener = new MyAuditListener(getLog());
 
 		Options options = new Options();
-		options.setThreshold(6);
+		options.setThreshold(threshold);
 		options.setOption(Option.IGNORE_STRINGS, true);
 
 		Checker checker = new Checker(auditListener, options);
@@ -82,7 +74,7 @@ public class SimianReport extends AbstractMavenReport {
 		}
 
 		if (checker.check()) {
-			System.out.println("Duplicate lines were found!");
+			getLog().info("Duplicate lines were found!");
 		}
 
 		getLog().info("process success");
@@ -91,6 +83,8 @@ public class SimianReport extends AbstractMavenReport {
 		simianReportRenderer.setOptions(options);
 		simianReportRenderer.setCheckSummary(auditListener.getCheckSummary());
 		simianReportRenderer.setBlockSets(auditListener.getBlockSets());
+		simianReportRenderer.setSourcePath(sourceDirectory, testSourceDirectory);
+		simianReportRenderer.setLog(getLog());
 		simianReportRenderer.render();
 	}
 

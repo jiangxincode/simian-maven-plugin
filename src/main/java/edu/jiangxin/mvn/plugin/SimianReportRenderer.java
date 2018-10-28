@@ -1,9 +1,13 @@
 package edu.jiangxin.mvn.plugin;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.reporting.AbstractMavenReportRenderer;
 
 import com.harukizaemon.simian.Block;
@@ -20,6 +24,12 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 	private CheckSummary checkSummary;
 
 	private List<BlockSet> blockSets;
+
+	private String sourceDirectory;
+
+	private String testSourceDirectory;
+
+	private Log log;
 
 	public SimianReportRenderer(Sink sink, ResourceBundle bundle) {
 		super(sink);
@@ -65,72 +75,6 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 	public void setBlockSets(List<BlockSet> blockSets) {
 		this.blockSets = blockSets;
-	}
-
-	private void duDetailSection() {
-		sink.sectionTitle1();
-		sink.text(bundle.getString("report.detail.title"));
-		sink.sectionTitle1_();
-
-		for (BlockSet blockSet : blockSets) {
-			duDetailSectionSingle(blockSet);
-		}
-
-	}
-
-	private void duDetailSectionSingle(BlockSet blockSet) {
-		sink.section2();
-
-		sink.sectionTitle2();
-		sink.text("LineCount: " + blockSet.getLineCount() + ", Fingerprint: " + blockSet.getFingerprint());
-		sink.sectionTitle2_();
-
-		sink.table();
-
-		sink.tableRow();
-
-		sink.tableHeaderCell();
-		sink.text("FileName");
-		sink.tableHeaderCell_();
-
-		sink.tableHeaderCell();
-		sink.text("StartLineNumber");
-		sink.tableHeaderCell_();
-
-		sink.tableHeaderCell();
-		sink.text("EndLineNumber");
-		sink.tableHeaderCell_();
-
-		sink.tableRow_();
-
-		for (Block block : blockSet.getBlocks()) {
-			String path = block.getSourceFile().getFilename();
-			String tmp = path.replace("src\\test\\java", "target/site/xref-test");
-			tmp = tmp.replace(".java", ".html");
-			tmp = tmp + "#L" + block.getStartLineNumber();
-			sink.tableRow();
-			sink.tableCell();
-			sink.link(tmp);
-			sink.text(String.valueOf(path));
-			sink.link_();
-			sink.tableCell_();
-
-			sink.tableCell();
-			sink.text(String.valueOf(block.getStartLineNumber()));
-			sink.tableCell_();
-
-			sink.tableCell();
-			sink.text(String.valueOf(block.getEndLineNumber()));
-			sink.tableCell_();
-
-			sink.tableRow_();
-
-		}
-
-		sink.table_();
-
-		sink.section2_();
-
 	}
 
 	private void doSummarySectionConfig() {
@@ -296,6 +240,103 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 		sink.table_();
 
 		sink.section2_();
+
+	}
+
+	private void duDetailSection() {
+		sink.sectionTitle1();
+		sink.text(bundle.getString("report.detail.title"));
+		sink.sectionTitle1_();
+
+		for (BlockSet blockSet : blockSets) {
+			duDetailSectionSingle(blockSet);
+		}
+
+	}
+
+	private void duDetailSectionSingle(BlockSet blockSet) {
+		sink.section2();
+
+		sink.sectionTitle2();
+		sink.text("LineCount: " + blockSet.getLineCount() + ", Fingerprint: " + blockSet.getFingerprint());
+		sink.sectionTitle2_();
+
+		sink.table();
+
+		sink.tableRow();
+
+		sink.tableHeaderCell();
+		sink.text("FileName");
+		sink.tableHeaderCell_();
+
+		sink.tableHeaderCell();
+		sink.text("StartLineNumber");
+		sink.tableHeaderCell_();
+
+		sink.tableHeaderCell();
+		sink.text("EndLineNumber");
+		sink.tableHeaderCell_();
+
+		sink.tableRow_();
+
+		for (Block block : blockSet.getBlocks()) {
+			String path = block.getSourceFile().getFilename();
+			String canonicalPath = null;
+			try {
+				canonicalPath = new File(path).getCanonicalPath();
+				if (FilenameUtils.directoryContains(sourceDirectory, canonicalPath)) {
+					log.info("file belongs to sourceDirectory: " + canonicalPath);
+					String tmp1 = "src" + File.separator + "main" + File.separator + "java";
+					String tmp2 = "target" + File.separator + "site" + File.separator + "xref";
+					log.info(canonicalPath + " " + tmp1 + " " + tmp2);
+					canonicalPath = FilenameUtils.separatorsToSystem(canonicalPath).replace(tmp1, tmp2);
+				} else if (FilenameUtils.directoryContains(testSourceDirectory, canonicalPath)) {
+					log.info("file belongs to testSourceDirectory: " + canonicalPath);
+					String tmp1 = "src" + File.separator + "test" + File.separator + "java";
+					String tmp2 = "target" + File.separator + "site" + File.separator + "xref-test";
+					log.info(canonicalPath + " " + tmp1 + " " + tmp2);
+					canonicalPath = FilenameUtils.separatorsToSystem(canonicalPath).replace(tmp1, tmp2);
+				} else {
+					log.error("file is invalid: " + canonicalPath);
+				}
+			} catch (IOException e1) {
+				log.error("replace failed: " + canonicalPath, e1);
+			}
+			canonicalPath = canonicalPath.replace(".java", ".html");
+			canonicalPath = canonicalPath + "#L" + block.getStartLineNumber();
+			sink.tableRow();
+			sink.tableCell();
+			sink.link(canonicalPath);
+			sink.text(String.valueOf(path));
+			sink.link_();
+			sink.tableCell_();
+
+			sink.tableCell();
+			sink.text(String.valueOf(block.getStartLineNumber()));
+			sink.tableCell_();
+
+			sink.tableCell();
+			sink.text(String.valueOf(block.getEndLineNumber()));
+			sink.tableCell_();
+
+			sink.tableRow_();
+
+		}
+
+		sink.table_();
+
+		sink.section2_();
+
+	}
+
+	public void setSourcePath(String sourceDirectory, String testSourceDirectory) {
+		this.sourceDirectory = sourceDirectory;
+		this.testSourceDirectory = testSourceDirectory;
+
+	}
+
+	public void setLog(Log log) {
+		this.log = log;
 
 	}
 
