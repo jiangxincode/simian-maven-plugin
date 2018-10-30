@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.jiangxincode</groupId>
     <artifactId>simian-maven-plugin</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.4-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>Simian Maven Plugin</name>
     <url>https://github.com/jiangxincode/simian-maven-plugin</url>
@@ -57,15 +57,10 @@
             <artifactId>maven-reporting-impl</artifactId>
             <version>3.0.0</version>
         </dependency>
-        <!-- <dependency> <groupId>org.codehaus.plexus</groupId> <artifactId>plexus-utils</artifactId> 
-            <version>3.1.0</version> </dependency> <dependency> <groupId>redhill</groupId> 
-            <artifactId>simian</artifactId> <version>2.2.4</version> </dependency> -->
         <dependency>
-            <groupId>redhill</groupId>
+            <groupId>com.harukizaemon.simian</groupId>
             <artifactId>simian</artifactId>
             <version>2.5.10</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/simian-2.5.10.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -136,7 +131,7 @@
             <plugin>
                 <groupId>com.github.jiangxincode</groupId>
                 <artifactId>simian-maven-plugin</artifactId>
-                <version>0.0.2</version>
+                <version>0.0.4-SNAPSHOT</version>
                 <configuration>
                     <threshold>3</threshold>
                 </configuration>

@@ -37,7 +37,7 @@ public class SimianReport extends AbstractMavenReport {
 	
 	@Parameter(defaultValue = "6", property = "simian.threshold", required = true)
 	private int threshold;
-
+	
 	@Override
 	public String getOutputDirectory() {
 		return outputDirectory;
