@@ -7,8 +7,14 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.ReportPlugin;
+import org.apache.maven.model.Reporting;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReportRenderer;
+import org.codehaus.plexus.util.PathTool;
+import org.codehaus.plexus.util.StringUtils;
 
 import com.harukizaemon.simian.Block;
 import com.harukizaemon.simian.CheckSummary;
@@ -25,11 +31,21 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 	private List<BlockSet> blockSets;
 
-	private String sourceDirectory;
+	private File sourceDirectory;
 
-	private String testSourceDirectory;
+	private File testSourceDirectory;
 
 	private Log log;
+
+	private String xrefRelativeLocation;
+
+	private String xrefRelativeTestLocation;
+
+	private boolean linkXRef;
+
+	private File outputDirectory;
+
+	private MavenProject project;
 
 	public SimianReportRenderer(Sink sink, ResourceBundle bundle) {
 		super(sink);
@@ -280,35 +296,10 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 		sink.tableRow_();
 
 		for (Block block : blockSet.getBlocks()) {
-			String path = block.getSourceFile().getFilename();
-			String canonicalPath = null;
-			try {
-				canonicalPath = new File(path).getCanonicalPath();
-				if (FilenameUtils.directoryContains(sourceDirectory, canonicalPath)) {
-					log.info("file belongs to sourceDirectory: " + canonicalPath);
-					String tmp1 = "src" + File.separator + "main" + File.separator + "java";
-					String tmp2 = "target" + File.separator + "site" + File.separator + "xref";
-					log.info(canonicalPath + " " + tmp1 + " " + tmp2);
-					canonicalPath = FilenameUtils.separatorsToSystem(canonicalPath).replace(tmp1, tmp2);
-				} else if (FilenameUtils.directoryContains(testSourceDirectory, canonicalPath)) {
-					log.info("file belongs to testSourceDirectory: " + canonicalPath);
-					String tmp1 = "src" + File.separator + "test" + File.separator + "java";
-					String tmp2 = "target" + File.separator + "site" + File.separator + "xref-test";
-					log.info(canonicalPath + " " + tmp1 + " " + tmp2);
-					canonicalPath = FilenameUtils.separatorsToSystem(canonicalPath).replace(tmp1, tmp2);
-				} else {
-					log.error("file is invalid: " + canonicalPath);
-				}
-			} catch (IOException e1) {
-				log.error("replace failed: " + canonicalPath, e1);
-			}
-			canonicalPath = canonicalPath.replace(".java", ".html");
-			canonicalPath = canonicalPath + "#L" + block.getStartLineNumber();
 			sink.tableRow();
+
 			sink.tableCell();
-			sink.link(canonicalPath);
-			sink.text(String.valueOf(path));
-			sink.link_();
+			processLinkPath(block);
 			sink.tableCell_();
 
 			sink.tableCell();
@@ -329,15 +320,122 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 	}
 
-	public void setSourcePath(String sourceDirectory, String testSourceDirectory) {
+	private void processLinkPath(Block block) {
+		String path = block.getSourceFile().getFilename();
+		log.info("path: " + path);
+		try {
+			if (FilenameUtils.directoryContains(sourceDirectory.getAbsolutePath(), path)) {
+				String relativePath = PathTool.getRelativeFilePath(sourceDirectory.getAbsolutePath(), path);
+				log.info("relativePath: " + relativePath);
+				if (xrefRelativeLocation != null) {
+					String linkUrl = xrefRelativeLocation + File.separator + relativePath;
+					linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
+					linkUrl = linkUrl + "#L" + block.getStartLineNumber();
+					sink.link(linkUrl);
+					sink.text(relativePath);
+					sink.link_();
+				} else {
+					sink.text(relativePath);
+				}
+
+			} else if (FilenameUtils.directoryContains(testSourceDirectory.getAbsolutePath(), path)) {
+				String relativePath = PathTool.getRelativeFilePath(testSourceDirectory.getAbsolutePath(), path);
+				log.info("relativePath: " + relativePath);
+				if (xrefRelativeTestLocation != null) {
+					String linkUrl = xrefRelativeTestLocation + File.separator + relativePath;
+					linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
+					linkUrl = linkUrl + "#L" + block.getStartLineNumber();
+					sink.link(linkUrl);
+					sink.text(relativePath);
+					sink.link_();
+				} else {
+					sink.text(relativePath);
+				}
+
+			} else {
+				log.error("file is invalid: " + path);
+			}
+		} catch (IOException e1) {
+			log.error("replace failed: " + path, e1);
+		}
+	}
+
+	private String constructRelativeXRefLocation(File xrefLocation) {
+		if (!linkXRef) {
+			log.error("linkXRef is false");
+			return null;
+		}
+		String relativePath = PathTool.getRelativePath(outputDirectory.getAbsolutePath(),
+				xrefLocation.getAbsolutePath());
+		if (StringUtils.isEmpty(relativePath)) {
+			relativePath = ".";
+		}
+		relativePath = relativePath + "/" + xrefLocation.getName();
+		if (xrefLocation.exists()) {
+			// XRef was already generated by manual execution of a lifecycle binding
+			log.info("xrefLocation exists, relativePath: " + relativePath);
+			return relativePath;
+		}
+
+		if (project == null) {
+			log.error("project is null");
+			return null;
+		}
+		Model model = project.getModel();
+		if (model == null) {
+			log.error("model is null");
+			return null;
+		}
+		Reporting reporting = model.getReporting();
+		if (reporting == null) {
+			log.error("reporting is null");
+			return null;
+		}
+		List<ReportPlugin> reportPlugins = reporting.getPlugins();
+		if (reportPlugins == null) {
+			log.error("reportPlugins is null");
+			return null;
+		}
+
+		for (ReportPlugin plugin : reportPlugins) {
+			String artifactId = plugin.getArtifactId();
+			if ("maven-jxr-plugin".equals(artifactId) || "jxr-maven-plugin".equals(artifactId)) {
+				log.info("plugin exists, relativePath: " + relativePath);
+				return relativePath;
+			}
+		}
+
+		log.warn("Unable to locate Source XRef to link to - DISABLED");
+		return null;
+	}
+
+	public void setSource(File sourceDirectory, File testSourceDirectory) {
 		this.sourceDirectory = sourceDirectory;
 		this.testSourceDirectory = testSourceDirectory;
-
 	}
 
 	public void setLog(Log log) {
 		this.log = log;
+	}
 
+	public void setXrefLocation(File xrefLocation) {
+		this.xrefRelativeLocation = constructRelativeXRefLocation(xrefLocation);
+	}
+
+	public void setXrefTestLocation(File xrefTestLocation) {
+		this.xrefRelativeTestLocation = constructRelativeXRefLocation(xrefTestLocation);
+	}
+
+	public void setLinkXRef(boolean linkXRef) {
+		this.linkXRef = linkXRef;
+	}
+
+	public void setOutputDirectory(File outputDirectory) {
+		this.outputDirectory = outputDirectory;
+	}
+
+	public void setProject(MavenProject project) {
+		this.project = project;
 	}
 
 }

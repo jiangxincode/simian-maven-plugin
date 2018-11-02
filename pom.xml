@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.jiangxincode</groupId>
     <artifactId>simian-maven-plugin</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.0.4</version>
     <packaging>maven-plugin</packaging>
     <name>Simian Maven Plugin</name>
     <url>https://github.com/jiangxincode/simian-maven-plugin</url>
@@ -131,9 +131,9 @@
             <plugin>
                 <groupId>com.github.jiangxincode</groupId>
                 <artifactId>simian-maven-plugin</artifactId>
-                <version>0.0.4-SNAPSHOT</version>
+                <version>0.0.4</version>
                 <configuration>
-                    <threshold>3</threshold>
+                    <threshold>6</threshold>
                 </configuration>
             </plugin>
             <plugin>

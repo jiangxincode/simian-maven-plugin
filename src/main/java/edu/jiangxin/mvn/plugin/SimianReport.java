@@ -1,7 +1,6 @@
 package edu.jiangxin.mvn.plugin;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -24,39 +23,39 @@ public class SimianReport extends AbstractMavenReport {
 	private SimianReportRenderer simianReportRenderer;
 
 	@Parameter(defaultValue = "${basedir}", property = "simian.projectDirectory", required = true)
-	private String projectDirectory;
-
-	@Parameter(defaultValue = "${project.reporting.outputDirectory}", property = "simian.outputDirectory", required = true)
-	private String outputDirectory;
+	private File projectDirectory;
 
 	@Parameter(defaultValue = "${project.build.sourceDirectory}", property = "simian.sourceDirectory", required = true)
-	private String sourceDirectory;
+	private File sourceDirectory;
 
 	@Parameter(defaultValue = "${project.build.testSourceDirectory}", property = "simian.testSourceDirectory", required = true)
-	private String testSourceDirectory;
-	
+	private File testSourceDirectory;
+
+	/**
+	 * Link the violation line numbers to the source xref. Defaults to true and will link automatically if jxr plugin is
+	 * being used.
+	 */
+	@Parameter(defaultValue = "true", property = "linkXRef")
+	private boolean linkXRef;
+
+	@Parameter(defaultValue = "${project.build.directory}/site/xref")
+	private File xrefLocation;
+
+	@Parameter(defaultValue = "${project.build.directory}/site/xref-test")
+	private File xrefTestLocation;
+
 	@Parameter(defaultValue = "6", property = "simian.threshold", required = true)
 	private int threshold;
-	
-	@Override
-	public String getOutputDirectory() {
-		return outputDirectory;
-	}
 
 	@Override
 	public void executeReport(Locale locale) throws MavenReportException {
-		getLog().info("projectDirectory： " + projectDirectory);
-		ArrayList<File> lists = new FileFilterWrapper().list(projectDirectory, ".java");
-		assert lists != null;
-		String[] params = new String[lists.size()];
-		for (int i = 0; i < lists.size(); i++) {
-			try {
-				params[i] = lists.get(i).getCanonicalPath();
-			} catch (IOException e) {
-				getLog().error("getCanonicalPath failed", e);
-				return;
-			}
-		}
+		ArrayList<File> lists = new ArrayList<File>();
+		getLog().info("sourceDirectory： " + sourceDirectory);
+		ArrayList<File> sourceList = new FileFilterWrapper().list(sourceDirectory.getAbsolutePath(), ".java");
+		getLog().info("testSourceDirectory： " + testSourceDirectory);
+		ArrayList<File> testSourceList = new FileFilterWrapper().list(testSourceDirectory.getAbsolutePath(), ".java");
+		lists.addAll(sourceList);
+		lists.addAll(testSourceList);
 
 		MyAuditListener auditListener = new MyAuditListener(getLog());
 
@@ -83,8 +82,13 @@ public class SimianReport extends AbstractMavenReport {
 		simianReportRenderer.setOptions(options);
 		simianReportRenderer.setCheckSummary(auditListener.getCheckSummary());
 		simianReportRenderer.setBlockSets(auditListener.getBlockSets());
-		simianReportRenderer.setSourcePath(sourceDirectory, testSourceDirectory);
+		simianReportRenderer.setSource(sourceDirectory, testSourceDirectory);
 		simianReportRenderer.setLog(getLog());
+		simianReportRenderer.setOutputDirectory(outputDirectory);
+		simianReportRenderer.setLinkXRef(linkXRef);
+		simianReportRenderer.setProject(project);
+		simianReportRenderer.setXrefLocation(xrefLocation);
+		simianReportRenderer.setXrefTestLocation(xrefTestLocation);
 		simianReportRenderer.render();
 	}
 
