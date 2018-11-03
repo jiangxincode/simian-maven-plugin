@@ -2,6 +2,9 @@ package edu.jiangxin.mvn.plugin;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -77,6 +80,15 @@ public class SimianReport extends AbstractMavenReport {
 		}
 
 		getLog().info("process success");
+		
+		List<BlockSet> blockSets = auditListener.getBlockSets();
+		Collections.sort(blockSets, new Comparator<BlockSet>() {
+
+			@Override
+			public int compare(BlockSet blockSet1, BlockSet blockSet2) {
+				return blockSet2.getLineCount() - blockSet1.getLineCount();
+			}
+		});
 
 		simianReportRenderer = new SimianReportRenderer(getSink(), getBundle(locale));
 		simianReportRenderer.setOptions(options);

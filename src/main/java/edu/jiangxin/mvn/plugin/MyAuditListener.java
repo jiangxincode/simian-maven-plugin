@@ -40,13 +40,13 @@ public class MyAuditListener implements AuditListener {
 	@Override
 	public void endCheck(CheckSummary checkSummary) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("DuplicateBlockCount: ").append(checkSummary.getDuplicateBlockCount()).append("DuplicateFileCount")
-				.append(checkSummary.getDuplicateFileCount()).append("DuplicateLineCount")
-				.append(checkSummary.getDuplicateLineCount()).append("DuplicateLinePercentage")
-				.append(checkSummary.getDuplicateLinePercentage()).append("ProcessingTime")
-				.append(checkSummary.getProcessingTime()).append("TotalFileCount")
-				.append(checkSummary.getTotalFileCount()).append("TotalRawLineCount")
-				.append(checkSummary.getTotalRawLineCount()).append("TotalSignificantLineCount")
+		sb.append("DuplicateBlockCount: ").append(checkSummary.getDuplicateBlockCount()).append(", DuplicateFileCount")
+				.append(checkSummary.getDuplicateFileCount()).append(", DuplicateLineCount")
+				.append(checkSummary.getDuplicateLineCount()).append(", DuplicateLinePercentage")
+				.append(checkSummary.getDuplicateLinePercentage()).append(", ProcessingTime")
+				.append(checkSummary.getProcessingTime()).append(", TotalFileCount")
+				.append(checkSummary.getTotalFileCount()).append(", TotalRawLineCount")
+				.append(checkSummary.getTotalRawLineCount()).append(", TotalSignificantLineCount")
 				.append(checkSummary.getTotalSignificantLineCount());
 		log.info("endCheck is invoked: [" + sb.toString() + "]");
 		this.checkSummary = checkSummary;
@@ -55,8 +55,8 @@ public class MyAuditListener implements AuditListener {
 	@Override
 	public void block(Block block) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("EndLineNumber: ").append(block.getEndLineNumber()).append("SourceFile: ")
-				.append(block.getSourceFile()).append("StartLineNumber: ").append(block.getStartLineNumber());
+		sb.append("EndLineNumber: ").append(block.getEndLineNumber()).append(", SourceFile: ")
+				.append(block.getSourceFile()).append(", StartLineNumber: ").append(block.getStartLineNumber());
 		log.info("block is invoked: [" + sb.toString() + "]");
 		currentBlockSet.getBlocks().add(block);
 	}

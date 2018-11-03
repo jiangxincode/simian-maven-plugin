@@ -2,6 +2,7 @@ package edu.jiangxin.mvn.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -66,6 +67,13 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 		sink.sectionTitle1_();
 
 		sink.text(bundle.getString("report.introduction"));
+		
+		sink.link("http://www.redhillconsulting.com.au/products/simian");
+		sink.text(" simian");
+		sink.link_();
+		
+		sink.lineBreak();
+		sink.text(MessageFormat.format(bundle.getString("report.introduction.version"), Constant.SIMIAN_VERSION));
 
 		sink.sectionTitle1();
 		sink.text(bundle.getString("report.summary.title"));
@@ -79,18 +87,6 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 		sink.section1_();
 
-	}
-
-	public void setOptions(Options options) {
-		this.options = options;
-	}
-
-	public void setCheckSummary(CheckSummary checkSummary) {
-		this.checkSummary = checkSummary;
-	}
-
-	public void setBlockSets(List<BlockSet> blockSets) {
-		this.blockSets = blockSets;
 	}
 
 	private void doSummarySectionConfig() {
@@ -282,7 +278,7 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 		sink.tableRow();
 
 		sink.tableHeaderCell();
-		sink.text("FileName");
+		sink.text("File");
 		sink.tableHeaderCell_();
 
 		sink.tableHeaderCell();
@@ -407,6 +403,18 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 		log.warn("Unable to locate Source XRef to link to - DISABLED");
 		return null;
+	}
+
+	public void setOptions(Options options) {
+		this.options = options;
+	}
+
+	public void setCheckSummary(CheckSummary checkSummary) {
+		this.checkSummary = checkSummary;
+	}
+
+	public void setBlockSets(List<BlockSet> blockSets) {
+		this.blockSets = blockSets;
 	}
 
 	public void setSource(File sourceDirectory, File testSourceDirectory) {
