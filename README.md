@@ -4,8 +4,6 @@
 
 There is a `maven-simian-plugin`(http://maven.apache.org/archives/maven-1.x/plugins/simian), however it can be used in maven 1.x only, so I write the `simian-maven-plugin` for maven 2+.
 
-This project is not fully finished, but spring is coming. 
-
 ## How to Use
 
 `maven-simian-plugin` has transparent dependency of `simian`, but `simian` is not a free software. Therefore there is not a package in maven center. 
