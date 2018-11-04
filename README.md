@@ -1,12 +1,14 @@
 # Simian Maven Plugin
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.jiangxincode/simian-maven-plugin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.jiangxincode/simian-maven-plugin)
+
 `simian-maven-plugin` is a maven plugin for `simian`. You can visit <http://www.harukizaemon.com/simian> for further information of `simian`.
 
 There is a `maven-simian-plugin`(http://maven.apache.org/archives/maven-1.x/plugins/simian), however it can be used in maven 1.x only, so I write the `simian-maven-plugin` for maven 2+.
 
 ## How to Use
 
-`maven-simian-plugin` has transparent dependency of `simian`, but `simian` is not a free software. Therefore there is not a package in maven center. 
+`simian-maven-plugin` has transparent dependency of `simian`, but `simian` is not a free software. Therefore there is not a package in maven center. 
 
 1. Download the package in <http://www.harukizaemon.com/simian/index.html>, warn the license of `simian` and unzip the package.
 
