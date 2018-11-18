@@ -27,7 +27,7 @@ public class MyAuditListener implements AuditListener {
 
 	@Override
 	public void fileProcessed(SourceFile sourceFile) {
-		log.info("fileProcessed is invoked: " + sourceFile.getFilename());
+		log.debug("fileProcessed is invoked: " + sourceFile.getFilename());
 
 	}
 
@@ -57,13 +57,13 @@ public class MyAuditListener implements AuditListener {
 		StringBuilder sb = new StringBuilder();
 		sb.append("EndLineNumber: ").append(block.getEndLineNumber()).append(", SourceFile: ")
 				.append(block.getSourceFile()).append(", StartLineNumber: ").append(block.getStartLineNumber());
-		log.info("block is invoked: [" + sb.toString() + "]");
+		log.debug("block is invoked: [" + sb.toString() + "]");
 		currentBlockSet.getBlocks().add(block);
 	}
 
 	@Override
 	public void startSet(int lineCount, String fingerprint) {
-		log.info("startSet is invoked: [lineCount: " + lineCount + ", fingerprint: " + fingerprint + "]");
+		log.debug("startSet is invoked: [lineCount: " + lineCount + ", fingerprint: " + fingerprint + "]");
 		BlockSet blockSet = new BlockSet();
 		blockSet.setLineCount(lineCount);
 		blockSet.setFingerprint(fingerprint);
@@ -74,13 +74,13 @@ public class MyAuditListener implements AuditListener {
 
 	@Override
 	public void endSet(String text) {
-		log.info("endSet is invoked: " + text);
+		log.debug("endSet is invoked: " + text);
 
 	}
 
 	@Override
 	public void error(File file, Throwable e) {
-		log.info("error is invoked");
+		log.error("error is invoked: " + file.getAbsolutePath(), e);
 
 	}
 

@@ -318,11 +318,11 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 	private void processLinkPath(Block block) {
 		String path = block.getSourceFile().getFilename();
-		log.info("path: " + path);
+		log.debug("path: " + path);
 		try {
 			if (FilenameUtils.directoryContains(sourceDirectory.getAbsolutePath(), path)) {
 				String relativePath = PathTool.getRelativeFilePath(sourceDirectory.getAbsolutePath(), path);
-				log.info("relativePath: " + relativePath);
+				log.debug("relativePath: " + relativePath);
 				if (xrefRelativeLocation != null) {
 					String linkUrl = xrefRelativeLocation + File.separator + relativePath;
 					linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
@@ -336,7 +336,7 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
 			} else if (FilenameUtils.directoryContains(testSourceDirectory.getAbsolutePath(), path)) {
 				String relativePath = PathTool.getRelativeFilePath(testSourceDirectory.getAbsolutePath(), path);
-				log.info("relativePath: " + relativePath);
+				log.debug("relativePath: " + relativePath);
 				if (xrefRelativeTestLocation != null) {
 					String linkUrl = xrefRelativeTestLocation + File.separator + relativePath;
 					linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
