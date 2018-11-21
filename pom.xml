@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.jiangxincode</groupId>
     <artifactId>simian-maven-plugin</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
     <packaging>maven-plugin</packaging>
     <name>Simian Maven Plugin</name>
     <url>https://github.com/jiangxincode/simian-maven-plugin</url>
@@ -63,7 +63,7 @@
             <version>1.1.2</version>
         </dependency>
         <dependency>
-            <groupId>com.harukizaemon.simian</groupId>
+            <groupId>com.github.jiangxincode</groupId>
             <artifactId>simian</artifactId>
             <version>2.5.10</version>
         </dependency>
