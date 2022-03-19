@@ -1,11 +1,9 @@
 package edu.jiangxin.mvn.plugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.ResourceBundle;
-
+import com.harukizaemon.simian.Block;
+import com.harukizaemon.simian.CheckSummary;
+import com.harukizaemon.simian.Option;
+import com.harukizaemon.simian.Options;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.doxia.sink.Sink;
 import org.apache.maven.model.Model;
@@ -17,10 +15,10 @@ import org.apache.maven.reporting.AbstractMavenReportRenderer;
 import org.codehaus.plexus.util.PathTool;
 import org.codehaus.plexus.util.StringUtils;
 
-import com.harukizaemon.simian.Block;
-import com.harukizaemon.simian.CheckSummary;
-import com.harukizaemon.simian.Option;
-import com.harukizaemon.simian.Options;
+import java.io.File;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public class SimianReportRenderer extends AbstractMavenReportRenderer {
 
@@ -319,40 +317,36 @@ public class SimianReportRenderer extends AbstractMavenReportRenderer {
 	private void processLinkPath(Block block) {
 		String path = block.getSourceFile().getFilename();
 		log.debug("path: " + path);
-		try {
-			if (FilenameUtils.directoryContains(sourceDirectory.getAbsolutePath(), path)) {
-				String relativePath = PathTool.getRelativeFilePath(sourceDirectory.getAbsolutePath(), path);
-				log.debug("relativePath: " + relativePath);
-				if (xrefRelativeLocation != null) {
-					String linkUrl = xrefRelativeLocation + File.separator + relativePath;
-					linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
-					linkUrl = linkUrl + "#L" + block.getStartLineNumber();
-					sink.link(linkUrl);
-					sink.text(relativePath);
-					sink.link_();
-				} else {
-					sink.text(relativePath);
-				}
-
-			} else if (FilenameUtils.directoryContains(testSourceDirectory.getAbsolutePath(), path)) {
-				String relativePath = PathTool.getRelativeFilePath(testSourceDirectory.getAbsolutePath(), path);
-				log.debug("relativePath: " + relativePath);
-				if (xrefRelativeTestLocation != null) {
-					String linkUrl = xrefRelativeTestLocation + File.separator + relativePath;
-					linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
-					linkUrl = linkUrl + "#L" + block.getStartLineNumber();
-					sink.link(linkUrl);
-					sink.text(relativePath);
-					sink.link_();
-				} else {
-					sink.text(relativePath);
-				}
-
+		if (FilenameUtils.directoryContains(sourceDirectory.getAbsolutePath(), path)) {
+			String relativePath = PathTool.getRelativeFilePath(sourceDirectory.getAbsolutePath(), path);
+			log.debug("relativePath: " + relativePath);
+			if (xrefRelativeLocation != null) {
+				String linkUrl = xrefRelativeLocation + File.separator + relativePath;
+				linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
+				linkUrl = linkUrl + "#L" + block.getStartLineNumber();
+				sink.link(linkUrl);
+				sink.text(relativePath);
+				sink.link_();
 			} else {
-				log.error("file is invalid: " + path);
+				sink.text(relativePath);
 			}
-		} catch (IOException e1) {
-			log.error("replace failed: " + path, e1);
+
+		} else if (FilenameUtils.directoryContains(testSourceDirectory.getAbsolutePath(), path)) {
+			String relativePath = PathTool.getRelativeFilePath(testSourceDirectory.getAbsolutePath(), path);
+			log.debug("relativePath: " + relativePath);
+			if (xrefRelativeTestLocation != null) {
+				String linkUrl = xrefRelativeTestLocation + File.separator + relativePath;
+				linkUrl = linkUrl.replace(FilenameUtils.getExtension(path), "html");
+				linkUrl = linkUrl + "#L" + block.getStartLineNumber();
+				sink.link(linkUrl);
+				sink.text(relativePath);
+				sink.link_();
+			} else {
+				sink.text(relativePath);
+			}
+
+		} else {
+			log.error("file is invalid: " + path);
 		}
 	}
 

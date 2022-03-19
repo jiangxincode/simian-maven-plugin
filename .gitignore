@@ -3,4 +3,5 @@ target/
 .classpath
 .project
 *.db
-/dependency-reduced-pom.xml
+/dependency-reduced-pom.
+.idea/
